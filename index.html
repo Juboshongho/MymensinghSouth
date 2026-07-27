@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ব্যয় ভাউচার | বাংলাদেশ আহলেহাদীছ যুবসংঘ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #0d3b2e;
+    --primary-dark: #082218;
+    --primary-light: #1a5a47;
+    --gold: #b8893a;
+    --gold-light: #d4af37;
+    --cream: #faf7ed;
+    --cream-dark: #f0ead6;
+    --ink: #1a1a1a;
+    --ink-soft: #555;
+    --border: #d4c9a8;
+    --danger: #c0392b;
+  }
+
+  body {
+    font-family: 'Anek Bangla', sans-serif;
+    background:
+      radial-gradient(circle at 10% 10%, rgba(184, 137, 58, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(13, 59, 46, 0.1) 0%, transparent 40%),
+      linear-gradient(135deg, #f5f1e3 0%, #ede4c8 100%);
+    min-height: 100vh;
+    padding: 24px;
+    color: var(--ink);
+  }
+
+  .app-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+  }
+
+  /* ============ FORM PANEL ============ */
+  .form-panel {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 10px 40px rgba(13, 59, 46, 0.08), 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #e8e0c5;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .form-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--gold) 50%, var(--primary) 100%);
+  }
+
+  .form-header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--cream-dark);
+  }
+
+  .form-header h2 {
+    font-family: 'Anek Bangla', sans-serif;
+    color: var(--primary);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .form-header p {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  .form-group { margin-bottom: 18px; }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--primary-dark);
+    font-size: 14px;
+  }
+
+  .form-group label .req { color: var(--danger); margin-left: 2px; }
+
+  .form-control {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #d8d0b3;
+    border-radius: 8px;
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 15px;
+    background: #fcfbf5;
+    transition: all 0.2s;
+    color: var(--ink);
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(13, 59, 46, 0.12);
+  }
+
+  textarea.form-control {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .voucher-no-wrapper {
+    display: flex;
+    gap: 8px;
+  }
+
+  .voucher-no-wrapper .form-control {
+    font-weight: 700;
+    letter-spacing: 2px;
+    background: var(--cream);
+    color: var(--primary-dark);
+    text-transform: uppercase;
+  }
+
+  .btn-refresh {
+    background: var(--cream-dark);
+    color: var(--primary-dark);
+    border: 1px solid var(--border);
+    padding: 0 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-refresh:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+
+  .expense-items-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .expense-item-row {
+    display: grid;
+    grid-template-columns: 1fr 120px auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn-remove-item {
+    background: #fdecea;
+    color: var(--danger);
+    border: 1px solid #f5c6cb;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-remove-item:hover {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn-add-item {
+    background: transparent;
+    color: var(--primary);
+    border: 1.5px dashed var(--primary);
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  .btn-add-item:hover {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-download {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(13, 59, 46, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(13, 59, 46, 0.35);
+  }
+
+  .btn-download:active { transform: translateY(0); }
+  .btn-download.loading { pointer-events: none; opacity: 0.75; }
+
+  /* ============ VOUCHER PREVIEW (Fixed Width with Auto Scale) ============ */
+  .voucher-wrapper {
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .voucher-scaler {
+    width: 800px;
+    transform-origin: top left;
+  }
+
+  .voucher {
+    background: white;
+    box-shadow: 0 15px 50px rgba(13, 59, 46, 0.15), 0 4px 12px rgba(0,0,0,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    width: 800px; 
+  }
+
+  .voucher::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--gold) 50%, var(--primary) 100%);
+    z-index: 2;
+  }
+
+  .voucher-inner {
+    padding: 40px 44px 34px;
+    border: 2px solid var(--primary);
+    margin: 14px;
+    position: relative;
+    background: white;
+  }
+
+  .voucher-inner::before,
+  .voucher-inner::after {
+    content: '';
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--gold);
+  }
+  .voucher-inner::before {
+    top: -2px; left: -2px;
+    border-right: none; border-bottom: none;
+  }
+  .voucher-inner::after {
+    bottom: -2px; right: -2px;
+    border-left: none; border-top: none;
+  }
+
+  .voucher-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Vertically centers left and right blocks */
+    border-bottom: 1.5px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+  }
+
+  .header-left {
+    border-right: 2px solid var(--gold);
+    padding-right: 24px;
+  }
+
+  .header-left h1 {
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 34px;
+    color: var(--primary);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center; /* Perfectly centers text and logo */
+    justify-content: flex-end;
+    gap: 18px;
+    padding-left: 20px;
+  }
+
+  .org-text {
+    text-align: right;
+  }
+
+  .org-text h2 {
+    font-family: 'Anek Bangla', sans-serif;
+    color: var(--primary-dark);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 4px;
+  }
+
+  .org-text p {
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .org-logo img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    display: block; 
+    margin-top: 4px; /* Slight optical balance */
+  }
+
+  .voucher-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+    margin-bottom: 24px;
+    padding: 14px 18px;
+    background: var(--cream);
+    border-radius: 6px;
+    border: 1px solid var(--cream-dark);
+  }
+
+  .meta-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 15px;
+    flex-wrap: wrap;
+  }
+
+  .meta-label {
+    font-weight: 600;
+    color: var(--primary-dark);
+    white-space: nowrap;
+  }
+
+  .meta-value {
+    color: var(--ink);
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .meta-value strong {
+    color: var(--primary-dark);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .voucher-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 15px;
+  }
+
+  .voucher-table thead th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-family: 'Anek Bangla', sans-serif;
+    font-size: 16px;
+    border: 1px solid var(--primary-dark);
+  }
+
+  .voucher-table thead th:first-child { text-align: center; width: 70px; border-top-left-radius: 4px; }
+  .voucher-table thead th:last-child { text-align: right; width: 160px; border-top-right-radius: 4px; }
+
+  .voucher-table tbody td {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    background: white;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .voucher-table tbody td:first-child {
+    text-align: center;
+    font-weight: 600;
+    color: var(--primary-dark);
+  }
+
+  .voucher-table tbody td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--primary-dark);
+    white-space: nowrap;
+  }
+
+  .voucher-table tfoot td {
+    padding: 14px;
+    border: 1px solid var(--border);
+    background: var(--cream);
+    font-weight: 700;
+    font-size: 16px;
+    font-family: 'Anek Bangla', sans-serif;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  .voucher-table tfoot td:last-child {
+    text-align: right;
+    color: var(--primary-dark);
+  }
+
+  .amount-in-words {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #fbf9f0;
+    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .amount-in-words strong {
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-family: 'Anek Bangla', sans-serif;
+  }
+
+  .comments-row {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: #fbf9f0;
+    border-left: 3px solid var(--primary-light);
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .comments-row .label {
+    font-weight: 600;
+    color: var(--primary-dark);
+    display: block;
+    margin-bottom: 2px;
+    font-family: 'Anek Bangla', sans-serif;
+  }
+
+  /* ============ RESPONSIVE (Only for Form Layout & Scaler) ============ */
+  @media (max-width: 1180px) {
+    .app-container {
+      flex-direction: column;
+      align-items: center;
+    }
+    .form-panel {
+      width: 100%;
+      max-width: 800px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .form-panel { padding: 22px 18px; }
+    .form-header h2 { font-size: 22px; }
+    .row-2 { grid-template-columns: 1fr; }
+    .expense-item-row { grid-template-columns: 1fr 100px auto; }
+  }
+
+  /* spinner */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ============ FORM PANEL ============ -->
+  <div class="form-panel">
+    <div class="form-header">
+      <h2>ব্যয় ভাউচার তৈরি</h2>
+      <p>তথ্য পূরণ করুন, লাইভ প্রিভিউ দেখুন ও PNG ডাউনলোড করুন</p>
+    </div>
+
+    <form id="voucherForm" autocomplete="off">
+      <div class="form-group">
+        <label>ভাউচার নম্বর</label>
+        <div class="voucher-no-wrapper">
+          <input type="text" id="voucherNo" class="form-control" readonly>
+          <button type="button" class="btn-refresh" onclick="regenerateVoucherNo()">নতুন</button>
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="form-group">
+          <label>তারিখ <span class="req">*</span></label>
+          <input type="date" id="voucherDate" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>খাতের নাম <span class="req">*</span></label>
+          <input type="text" id="expenseHead" class="form-control" placeholder="যেমন: যাতায়াত" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>প্রস্তুতকারীর নাম <span class="req">*</span></label>
+        <input type="text" id="approvedBy" class="form-control" placeholder="পুরো নাম" required>
+      </div>
+
+      <div class="form-group">
+        <label>খরচের বিবরণ <span class="req">*</span></label>
+        <div class="expense-items-container" id="expenseItemsContainer"></div>
+        <button type="button" class="btn-add-item" onclick="addExpenseItem()">+ আরও খরচ যোগ করুন</button>
+      </div>
+
+      <div class="form-group">
+        <label>মন্তব্য (ঐচ্ছিক)</label>
+        <textarea id="comments" class="form-control" placeholder="অতিরিক্ত কিছু লিখতে চাইলে..."></textarea>
+      </div>
+
+      <button type="button" class="btn-download" id="downloadBtn" onclick="downloadVoucher()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span id="btnText">PNG ডাউনলোড করুন</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- ============ VOUCHER PREVIEW ============ -->
+  <div class="voucher-wrapper">
+    <div class="voucher-scaler" id="voucherScaler">
+      <div class="voucher" id="voucherPreview">
+        <div class="voucher-inner">
+          
+          <div class="voucher-header">
+            <div class="header-left">
+              <h1>ব্যয় ভাউচার</h1>
+            </div>
+            <div class="header-right">
+              <div class="org-text">
+                <h2>বাংলাদেশ আহলেহাদীছ যুবসংঘ</h2>
+                <p>ময়মনসিংহ দক্ষিণ সাংগঠনিক যেলা<br>রাধাকানাই, ফুলবাড়ীয়া, ময়মনসিংহ</p>
+              </div>
+              <div class="org-logo">
+                <img src="https://lh3.googleusercontent.com/d/1U45HEbieEm4pDC_wRuwtPjRy_WpSyLI0=w400" alt="Logo" crossorigin="anonymous">
+              </div>
+            </div>
+          </div>
+
+          <div class="voucher-meta">
+            <div class="meta-item">
+              <span class="meta-label">ভাউচার নং:</span>
+              <span class="meta-value"><strong id="previewVoucherNo">—</strong></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">তারিখ:</span>
+              <span class="meta-value" id="previewDate">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">খাত:</span>
+              <span class="meta-value" id="previewHead">—</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">প্রস্তুতকারী:</span>
+              <span class="meta-value" id="previewApprovedBy">—</span>
+            </div>
+          </div>
+
+          <table class="voucher-table">
+            <thead>
+              <tr>
+                <th>ক্রমিক</th>
+                <th>খরচের বিবরণ</th>
+                <th>টাকার পরিমাণ</th>
+              </tr>
+            </thead>
+            <tbody id="previewTbody">
+              <!-- Dynamic Rows -->
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2" style="text-align:right;">সর্বমোট:</td>
+                <td id="previewTotal">—</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="amount-in-words" id="amountInWords" style="display:none;">
+            <strong>কথায়:</strong> <span id="wordsText"></span>
+          </div>
+
+          <div class="comments-row" id="commentsRow" style="display:none;">
+            <span class="label">মন্তব্য:</span>
+            <span id="previewComments"></span>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ============ BENGALI NUMBER CONVERSION ============ */
+  const BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+  function toBn(num) {
+    if (num === null || num === undefined || num === '') return '';
+    return String(num).replace(/[0-9]/g, d => BN_DIGITS[+d]);
+  }
+
+  /* ============ VOUCHER NO GENERATOR (5 chars) ============ */
+  function generateVoucherNo() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let r = '';
+    for (let i = 0; i < 5; i++) {
+      r += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return r;
+  }
+
+  function regenerateVoucherNo() {
+    document.getElementById('voucherNo').value = generateVoucherNo();
+    updatePreview();
+  }
+
+  /* ============ BENGALI DATE FORMAT ============ */
+  function formatBnDate(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d)) return '—';
+    const months = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন',
+                    'জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+    return `${toBn(d.getDate())} ${months[d.getMonth()]}, ${toBn(d.getFullYear())}`;
+  }
+
+  /* ============ AMOUNT TO BENGALI WORDS ============ */
+  function amountToBnWords(amount) {
+    const num = Math.floor(Number(amount));
+    if (isNaN(num) || num === 0) return 'শূন্য টাকা মাত্র';
+
+    const units = ['', 'এক', 'দুই', 'তিন', 'চার', 'পাঁচ', 'ছয়', 'সাত', 'আট', 'নয়'];
+    const teens = ['দশ','এগারো','বারো','তেরো','চৌদ্দ','পনেরো','ষোল','সতেরো','আঠারো','ঊনিশ'];
+    const tens = ['', '', 'বিশ','ত্রিশ','চল্লিশ','পঞ্চাশ','ষাট','সত্তর','আশি','নব্বই'];
+    const hundreds = ['', 'একশত','দুইশত','তিনশত','চারশত','পাঁচশত','ছয়শত','সাতশত','আটশত','নয়শত'];
+
+    function twoDigitWord(n) {
+      if (n < 10) return units[n];
+      if (n < 20) return teens[n - 10];
+      const t = Math.floor(n / 10);
+      const u = n % 10;
+      return u > 0 ? tens[t] + ' ' + units[u] : tens[t];
+    }
+
+    function threeDigitWord(n) {
+      const h = Math.floor(n / 100);
+      const rest = n % 100;
+      let str = '';
+      if (h > 0) str += hundreds[h] + ' ';
+      if (rest > 0) str += twoDigitWord(rest);
+      return str.trim();
+    }
+
+    let result = '';
+    const crore = Math.floor(num / 10000000);
+    const lakh = Math.floor((num % 10000000) / 100000);
+    const thousand = Math.floor((num % 100000) / 1000);
+    const hundred = num % 1000;
+
+    if (crore > 0) result += threeDigitWord(crore) + ' কোটি ';
+    if (lakh > 0) result += threeDigitWord(lakh) + ' লক্ষ ';
+    if (thousand > 0) result += threeDigitWord(thousand) + ' হাজার ';
+    if (hundred > 0) result += threeDigitWord(hundred);
+
+    const decimal = Math.round((Number(amount) - num) * 100);
+    if (decimal > 0) {
+      result += ' ও ' + twoDigitWord(decimal) + ' পয়সা';
+    }
+
+    return result.trim() + ' টাকা মাত্র';
+  }
+
+  /* ============ DYNAMIC EXPENSE ITEMS ============ */
+  function addExpenseItem(desc = '', amount = '') {
+    const container = document.getElementById('expenseItemsContainer');
+    const div = document.createElement('div');
+    div.className = 'expense-item-row';
+    div.innerHTML = `
+      <input type="text" class="form-control item-desc" placeholder="খরচের বিবরণ" value="${desc}">
+      <input type="number" class="form-control item-amount" placeholder="টাকার পরিমাণ" min="0" step="any" value="${amount}">
+      <button type="button" class="btn-remove-item" onclick="removeExpenseItem(this)">✕</button>
+    `;
+    container.appendChild(div);
+    div.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', updatePreview);
+    });
+    updatePreview();
+  }
+
+  function removeExpenseItem(btn) {
+    const container = document.getElementById('expenseItemsContainer');
+    if (container.children.length > 1) {
+      btn.parentElement.remove();
+      updatePreview();
+    }
+  }
+
+  /* ============ LIVE PREVIEW UPDATE ============ */
+  function updatePreview() {
+    const vNo = document.getElementById('voucherNo').value;
+    const date = document.getElementById('voucherDate').value;
+    const head = document.getElementById('expenseHead').value.trim();
+    const approvedBy = document.getElementById('approvedBy').value.trim();
+    const comments = document.getElementById('comments').value.trim();
+
+    document.getElementById('previewVoucherNo').textContent = vNo || '—';
+    document.getElementById('previewDate').textContent = formatBnDate(date);
+    document.getElementById('previewHead').textContent = head || '—';
+    document.getElementById('previewApprovedBy').textContent = approvedBy || '—';
+
+    const tbody = document.getElementById('previewTbody');
+    tbody.innerHTML = '';
+    let totalAmount = 0;
+    let hasValidItem = false;
+
+    const rows = document.querySelectorAll('#expenseItemsContainer .expense-item-row');
+    rows.forEach((row, i) => {
+      const desc = row.querySelector('.item-desc').value.trim();
+      const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
+
+      if (desc || amount > 0) {
+        hasValidItem = true;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${toBn(i + 1)}</td>
+          <td>${desc || '—'}</td>
+          <td>${amount > 0 ? toBn(amount) + ' ৳' : '—'}</td>
+        `;
+        tbody.appendChild(tr);
+        totalAmount += amount;
+      }
+    });
+
+    if (!hasValidItem) {
+      tbody.innerHTML = `<tr><td>১</td><td>—</td><td>—</td></tr>`;
+    }
+
+    const totalStr = totalAmount > 0 ? `${toBn(totalAmount.toFixed(2))} ৳` : '—';
+    document.getElementById('previewTotal').textContent = totalStr;
+
+    const wordsBox = document.getElementById('amountInWords');
+    const wordsText = document.getElementById('wordsText');
+    if (totalAmount > 0) {
+      wordsText.textContent = amountToBnWords(totalAmount);
+      wordsBox.style.display = 'block';
+    } else {
+      wordsBox.style.display = 'none';
+    }
+
+    const commentsRow = document.getElementById('commentsRow');
+    if (comments) {
+      document.getElementById('previewComments').textContent = comments;
+      commentsRow.style.display = 'block';
+    } else {
+      commentsRow.style.display = 'none';
+    }
+    
+    adjustScale();
+  }
+
+  /* ============ VOUCHER SCALER (For Small Screens Full Preview) ============ */
+  function adjustScale() {
+    const wrapper = document.querySelector('.voucher-wrapper');
+    const scaler = document.getElementById('voucherScaler');
+    if (!wrapper || !scaler) return;
+
+    const availableWidth = wrapper.offsetWidth;
+    const fixedWidth = 800;
+
+    if (availableWidth < fixedWidth) {
+      const scale = availableWidth / fixedWidth;
+      scaler.style.transform = `scale(${scale})`;
+      wrapper.style.height = (scaler.offsetHeight * scale) + 'px';
+    } else {
+      scaler.style.transform = 'scale(1)';
+      wrapper.style.height = 'auto';
+    }
+  }
+
+  /* ============ PNG DOWNLOAD ============ */
+  async function downloadVoucher() {
+    const btn = document.getElementById('downloadBtn');
+    const btnText = document.getElementById('btnText');
+
+    const required = ['voucherDate', 'expenseHead', 'approvedBy'];
+    for (const id of required) {
+      const el = document.getElementById(id);
+      if (!el.value.trim()) {
+        el.focus();
+        el.style.borderColor = '#c0392b';
+        setTimeout(() => el.style.borderColor = '', 1800);
+        return;
+      }
+    }
+
+    const rows = document.querySelectorAll('#expenseItemsContainer .expense-item-row');
+    let hasValid = false;
+    rows.forEach(row => {
+      const desc = row.querySelector('.item-desc').value.trim();
+      const amount = parseFloat(row.querySelector('.item-amount').value) || 0;
+      if (desc || amount > 0) hasValid = true;
+    });
+
+    if (!hasValid) {
+      const firstRow = document.querySelector('.expense-item-row .item-desc');
+      firstRow.focus();
+      firstRow.style.borderColor = '#c0392b';
+      setTimeout(() => firstRow.style.borderColor = '', 1800);
+      return;
+    }
+
+    const originalText = btnText.textContent;
+    btn.classList.add('loading');
+    btnText.textContent = 'তৈরি হচ্ছে...';
+    const originalSVG = btn.querySelector('svg');
+    if (originalSVG) {
+      const spinner = document.createElement('span');
+      spinner.className = 'spinner';
+      originalSVG.replaceWith(spinner);
+    }
+
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready;
+      }
+
+      const voucher = document.getElementById('voucherPreview');
+
+      const canvas = await html2canvas(voucher, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+        windowWidth: 800, 
+        windowHeight: voucher.scrollHeight
+      });
+
+      const link = document.createElement('a');
+      const vNo = document.getElementById('voucherNo').value || 'voucher';
+      link.download = `voucher-${vNo}.png`;
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error(err);
+      alert('ডাউনলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+    } finally {
+      btn.classList.remove('loading');
+      btnText.textContent = originalText;
+      const spinner = btn.querySelector('.spinner');
+      if (spinner) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '18');
+        svg.setAttribute('height', '18');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'none');
+        svg.setAttribute('stroke', 'currentColor');
+        svg.setAttribute('stroke-width', '2');
+        svg.setAttribute('stroke-linecap', 'round');
+        svg.setAttribute('stroke-linejoin', 'round');
+        svg.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>';
+        spinner.replaceWith(svg);
+      }
+    }
+  }
+
+  /* ============ INIT ============ */
+  document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('voucherDate').value = `${yyyy}-${mm}-${dd}`;
+
+    document.getElementById('voucherNo').value = generateVoucherNo();
+
+    addExpenseItem();
+
+    updatePreview();
+
+    ['voucherDate', 'expenseHead', 'approvedBy', 'comments']
+      .forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePreview);
+      });
+      
+    window.addEventListener('resize', adjustScale);
+  });
+</script>
+
+</body>
+</html>
