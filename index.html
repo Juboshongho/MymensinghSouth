@@ -265,6 +265,34 @@
     width: 800px; 
   }
 
+  /*
+   * Download is rendered from an isolated, fixed-size copy.  Keeping this
+   * outside every responsive transform makes the PNG identical on desktop
+   * and mobile.
+   */
+  .export-stage {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 800px;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    overflow: visible;
+    z-index: -9999;
+    pointer-events: none;
+  }
+
+  .export-stage .voucher {
+    width: 800px !important;
+    min-width: 800px !important;
+    max-width: 800px !important;
+    height: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
   .voucher::before {
     content: '';
     position: absolute;
@@ -353,6 +381,11 @@
   .org-logo img {
     width: 80px;
     height: 80px;
+    min-width: 80px;
+    min-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
+    aspect-ratio: 1 / 1;
     object-fit: contain;
     display: block; 
     margin-top: 4px; /* Slight optical balance */
@@ -840,6 +873,86 @@
   }
 
   /* ============ PNG DOWNLOAD ============ */
+  function waitForImage(img) {
+    if (img.complete && img.naturalWidth > 0) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Image load timed out')), 15000);
+      img.addEventListener('load', () => {
+        clearTimeout(timer);
+        resolve();
+      }, { once: true });
+      img.addEventListener('error', () => {
+        clearTimeout(timer);
+        reject(new Error('Image could not be loaded'));
+      }, { once: true });
+    });
+  }
+
+  async function createExportCopy() {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+
+    const source = document.getElementById('voucherPreview');
+    const stage = document.createElement('div');
+    stage.className = 'export-stage';
+
+    const copy = source.cloneNode(true);
+    copy.removeAttribute('id');
+    copy.setAttribute('aria-hidden', 'true');
+    copy.style.width = '800px';
+    copy.style.minWidth = '800px';
+    copy.style.maxWidth = '800px';
+    copy.style.transform = 'none';
+
+    stage.appendChild(copy);
+    document.body.appendChild(stage);
+
+    try {
+      const images = Array.from(copy.querySelectorAll('img'));
+      await Promise.all(images.map(waitForImage));
+
+      // Give the browser one full paint after fonts and images are ready.
+      await new Promise(resolve =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve))
+      );
+
+      return { stage, copy };
+    } catch (error) {
+      stage.remove();
+      throw error;
+    }
+  }
+
+  function saveCanvasAsPng(canvas, filename) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (!blob) {
+          reject(new Error('PNG could not be created'));
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = url;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        // Mobile browsers may still be reading the object URL after click().
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 1500);
+      }, 'image/png');
+    });
+  }
+
   async function downloadVoucher() {
     const btn = document.getElementById('downloadBtn');
     const btnText = document.getElementById('btnText');
@@ -882,28 +995,37 @@
     }
 
     try {
-      if (document.fonts && document.fonts.ready) {
-        await document.fonts.ready;
-      }
+      const { stage, copy } = await createExportCopy();
 
-      const voucher = document.getElementById('voucherPreview');
-
-      const canvas = await html2canvas(voucher, {
-        scale: 2,
+      try {
+        const canvas = await html2canvas(copy, {
+        scale: Math.min(3, Math.max(2, window.devicePixelRatio || 2)),
         backgroundColor: '#ffffff',
         useCORS: true,
+        allowTaint: false,
         logging: false,
-        windowWidth: 800, 
-        windowHeight: voucher.scrollHeight
-      });
+        width: 800,
+        height: Math.ceil(copy.getBoundingClientRect().height),
+        windowWidth: 1200,
+        windowHeight: Math.ceil(copy.scrollHeight),
+        scrollX: 0,
+        scrollY: 0,
+        onclone: clonedDocument => {
+          const clonedVoucher = clonedDocument.querySelector('.export-stage .voucher');
+          if (clonedVoucher) {
+            clonedVoucher.style.width = '800px';
+            clonedVoucher.style.minWidth = '800px';
+            clonedVoucher.style.maxWidth = '800px';
+            clonedVoucher.style.transform = 'none';
+          }
+        }
+        });
 
-      const link = document.createElement('a');
-      const vNo = document.getElementById('voucherNo').value || 'voucher';
-      link.download = `voucher-${vNo}.png`;
-      link.href = canvas.toDataURL('image/png');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        const vNo = document.getElementById('voucherNo').value || 'voucher';
+        await saveCanvasAsPng(canvas, `voucher-${vNo}.png`);
+      } finally {
+        stage.remove();
+      }
     } catch (err) {
       console.error(err);
       alert('ডাউনলোডে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
